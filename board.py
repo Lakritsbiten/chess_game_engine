@@ -1,10 +1,15 @@
 from square import Square, VALID_COLUMNS, VALID_ROWS
 from piece import Color
-import pawn
+from board_configs import default_board, puzzle_2
+from pawn import Rook, Pawn, King, Knight, Queen, Bishop
 
 class Board(object):
 
     __squares = dict()
+
+    def __init__(self, board_config=None):
+        self.__create_board_squares()
+        self.__board_from_config(board_config if board_config else default_board)
 
     def __create_board_squares(self):
         if not self.__squares:
@@ -14,34 +19,20 @@ class Board(object):
                     sq = Square(row=row, column=col)
                     self.__squares[key] = sq
 
-    def __init_position_by_color(self, color):
-        row = 1 if color == Color.White else 8
-        self.squares()['A' + str(row)].set_piece(pawn.Rook(color))
-        self.squares()['B' + str(row)].set_piece(pawn.Knight(color))
-        self.squares()['C' + str(row)].set_piece(pawn.Bishop(color))
-        self.squares()['D' + str(row)].set_piece(pawn.Queen(color))
-        self.squares()['E' + str(row)].set_piece(pawn.King(color))
-        self.squares()['F' + str(row)].set_piece(pawn.Bishop(color))
-        self.squares()['G' + str(row)].set_piece(pawn.Knight(color))
-        self.squares()['H' + str(row)].set_piece(pawn.Rook(color))
-        for col in VALID_COLUMNS:
-            row = 2 if color == Color.White else 7
-            self.squares()[col + str(row)].set_piece(pawn.Pawn(color))
-
-    def __init_positions(self):
-        self.__init_position_by_color(Color.White)
-        self.__init_position_by_color(Color.Black)
-
-    def setup(self):
-        self.__create_board_squares()
-        self.__init_positions()
-                
+    def __board_from_config(self, board_config):
+        for sqr, piece_name in board_config.items():
+            square_obj = self.square(sqr)
+            color = Color[piece_name.split(' ')[0]]
+            cls = eval(piece_name.split(' ')[1])
+            piece = cls(color)
+            square_obj.set_piece(piece)
+    
     def squares(self):
         return self.__squares
 
-    def square(self, coordinate):
-        assert coordinate in self.__squares.keys(), 'No such square {coordinate} on board'.format(coordinate=coordinate)
-        return self.__squares[coordinate]
+    def square(self, pos):
+        assert pos in self.__squares.keys(), 'No such square {pos} on board'.format(pos=pos)
+        return self.__squares[pos]
 
     def print_board(self):
         COLUUMN_SIZE = 13
@@ -82,8 +73,5 @@ class Board(object):
         return piece_taken
 
 if __name__ == '__main__':
-    board = Board()
-    board.setup()
-    #board.print_board()
-    board.make_move('E2', 'E4')
+    board = Board(puzzle_2)
     board.print_board()
